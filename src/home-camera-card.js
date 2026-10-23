@@ -15,6 +15,8 @@ const HcI18n = {
     quality_hint: 'Basculer entre HD et SD',
     privacy_on: '{c} : masquée, toucher pour l\'afficher',
     privacy_off: '{c} : visible, toucher pour la masquer',
+    enable: 'Activer',
+    disable: 'Désactiver',
     ed_title: 'Titre',
     ed_title_helper: 'Laisser vide pour « Caméras »',
     ed_icon: 'Icône',
@@ -49,6 +51,8 @@ const HcI18n = {
     quality_hint: 'Switch between HD and SD',
     privacy_on: '{c}: hidden, tap to show it',
     privacy_off: '{c}: visible, tap to hide it',
+    enable: 'Enable',
+    disable: 'Disable',
     ed_title: 'Title',
     ed_title_helper: 'Leave empty for "Cameras"',
     ed_icon: 'Icon',
@@ -243,7 +247,7 @@ class HomeCameraCard extends HTMLElement {
     const headSig = JSON.stringify([
       this._lang(),
       hd,
-      cams.map((cam) => [cam.short, cam.privacy, cam.power, this._hidden(cam)]),
+      cams.map((cam) => [cam.name, cam.short, cam.privacy, cam.power, this._hidden(cam)]),
     ]);
     if (headSig !== this._headSig) {
       this._headSig = headSig;
@@ -273,7 +277,10 @@ class HomeCameraCard extends HTMLElement {
 
   _renderHead(cams, visible, hd) {
     const c = this._config;
-    const title = c.title != null && c.title !== '' ? c.title : this._t('title');
+    // A single camera: its name is the title, and its badge says what a tap does.
+    const single = cams.length === 1;
+    let title = c.title;
+    if (title == null || title === '') title = single ? cams[0].name : this._t('title');
     const hidden = cams.length - visible.length;
 
     let summary = '';
@@ -304,7 +311,7 @@ class HomeCameraCard extends HTMLElement {
             off ? 'private' : 'exposed',
             `data-toggle="${hcEsc(target)}"`,
             off ? 'mdi:eye-lock' : 'mdi:eye-lock-open',
-            cam.short,
+            single ? this._t(off ? 'enable' : 'disable') : cam.short,
             this._t(off ? 'privacy_on' : 'privacy_off', { c: cam.name }),
           );
         })

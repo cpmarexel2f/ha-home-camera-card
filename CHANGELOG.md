@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+### Changes
+- With a single camera, its name is the card title (unless `title` is set) and its privacy badge reads **Disable** while it films and **Enable** while it is hidden (*Désactiver* / *Activer* in French).
+
 ## 1.0.0
 
 First public release.

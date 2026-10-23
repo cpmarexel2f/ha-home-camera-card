@@ -20,6 +20,7 @@ List the cameras, the card finds their privacy switch, SD stream and PTZ buttons
 
 - Header with the number of cameras live and hidden, and an **HD / SD** badge
 - One badge per camera: green lock when the camera is hidden, red when it films; tap to toggle its privacy switch (or its smart plug)
+- A single camera: its name is the title, and its badge reads *Disable* or *Enable*
 - Hidden cameras are removed from the grid: a camera is hidden when its **privacy switch is on** or its **power switch is off**
 - **HD / SD** switch: from an `input_select` shared by every dashboard, or from the card itself (remembered by the browser)
 - Live grid, clips, snapshots, PTZ and fullscreen through [Advanced Camera Card](https://github.com/dermotduffy/advanced-camera-card); any of its options can be set through `camera_card`
@@ -115,7 +116,7 @@ camera_card:
 | Option | Required | Default | Description |
 |---|---|---|---|
 | `cameras` | ✅ | — | List of cameras, see below; a bare entity id is a camera with every option found automatically |
-| `title` | ❌ | `Cameras` | Card title |
+| `title` | ❌ | `Cameras` | Card title; with a single camera, its name |
 | `icon` | ❌ | `mdi:cctv` | Icon next to the title |
 | `quality_entity` | ❌ | — | `input_select` (or `select`) holding the quality; without it the card keeps its own choice in the browser |
 | `hd_option` | ❌ | `HD` | Option of `quality_entity` meaning HD |
