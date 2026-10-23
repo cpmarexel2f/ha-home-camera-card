@@ -9,6 +9,7 @@ const HcI18n = {
     hidden_one: '{n} masquée',
     hidden_many: '{n} masquées',
     all_hidden: 'Toutes les caméras sont masquées',
+    one_hidden: 'Caméra désactivée',
     no_cameras: 'Aucune caméra configurée',
     hd: 'HD',
     sd: 'SD',
@@ -45,6 +46,7 @@ const HcI18n = {
     hidden_one: '{n} hidden',
     hidden_many: '{n} hidden',
     all_hidden: 'All cameras are hidden',
+    one_hidden: 'Camera disabled',
     no_cameras: 'No camera configured',
     hd: 'HD',
     sd: 'SD',
@@ -285,7 +287,7 @@ class HomeCameraCard extends HTMLElement {
 
     let summary = '';
     if (c.show_summary && cams.length) {
-      if (!visible.length) summary = this._t('all_hidden');
+      if (!visible.length) summary = this._t(single ? 'one_hidden' : 'all_hidden');
       else {
         summary = this._t(visible.length > 1 ? 'live_many' : 'live_one', { n: visible.length });
         if (hidden) summary += ` · ${this._t(hidden > 1 ? 'hidden_many' : 'hidden_one', { n: hidden })}`;
