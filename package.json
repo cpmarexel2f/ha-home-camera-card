@@ -1,6 +1,6 @@
 {
   "name": "ha-home-camera-card",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Lovelace card for Home Assistant showing every home camera in one grid, with privacy toggles, HD/SD switching and PTZ.",
   "private": true,
   "type": "module",

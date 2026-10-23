@@ -20,7 +20,7 @@ List the cameras, the card finds their privacy switch, SD stream and PTZ buttons
 
 - Header with the number of cameras live and hidden, and an **HD / SD** badge
 - One badge per camera: green lock when the camera is hidden, red when it films; tap to toggle its privacy switch (or its smart plug)
-- A single camera: its name is the title, its *Disable* / *Enable* toggle sits on the right and the HD / SD badge under the title
+- A single camera: its name is the title, a round *Disable* / *Enable* icon button sits on the right and the HD / SD badge under the title
 - Hidden cameras are removed from the grid: a camera is hidden when its **privacy switch is on** or its **power switch is off**
 - **HD / SD** switch: from an `input_select` shared by every dashboard, or from the card itself (remembered by the browser)
 - Live grid, clips, snapshots, PTZ and fullscreen through [Advanced Camera Card](https://github.com/dermotduffy/advanced-camera-card); any of its options can be set through `camera_card`

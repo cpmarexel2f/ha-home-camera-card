@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+### Changes
+- The single camera's toggle is a round icon button the size of the header icon, without text (*Disable* / *Enable* stays as its tooltip), centred on the right of the header.
+
 ## 1.2.0
 
 ### Changes

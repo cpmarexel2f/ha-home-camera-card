@@ -323,9 +323,17 @@ class HomeCameraCard extends HTMLElement {
     // A single camera with a toggle: the toggle sits on the right of the title, the quality under it
     // (only while the camera films: once it is hidden, the line says so instead).
     let right = quality;
+    let side = '';
     let sub = summary ? `<div class="summary">${hcEsc(summary)}</div>` : '';
     if (single && badges) {
-      right = badges;
+      // Icon only, the size of the header icon; the text stays in the tooltip and for screen readers.
+      const cam = cams[0];
+      const off = this._hidden(cam);
+      const label = this._t(off ? 'enable' : 'disable');
+      right = '';
+      side =
+        `<span class="toggle ${off ? 'private' : 'exposed'}" data-toggle="${hcEsc(cam.privacy || cam.power)}" role="button" tabindex="0"` +
+        ` title="${hcEsc(label)}" aria-label="${hcEsc(label)}"><ha-icon icon="${off ? 'mdi:eye-lock' : 'mdi:eye-lock-open'}"></ha-icon></span>`;
       if (visible.length) sub = `<div class="chips sub">${quality}</div>`;
       badges = '';
     }
@@ -335,7 +343,7 @@ class HomeCameraCard extends HTMLElement {
       `<div class="header"><div class="hicon ${level}"><ha-icon icon="${hcEsc(c.icon || 'mdi:cctv')}"></ha-icon></div>` +
       `<div class="titles"><div class="name-row"><div class="name">${hcEsc(title)}</div><div class="chips">${right}</div></div>` +
       sub +
-      '</div></div>' +
+      `</div>${side}</div>` +
       (badges ? `<div class="chips badges">${badges}</div>` : '');
   }
 
@@ -448,6 +456,10 @@ class HomeCameraCard extends HTMLElement {
       '.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }' +
       '.chips.badges, .chips.sub { justify-content: flex-start; }' +
       '.chips.sub { margin-top: 3px; }' +
+      '.toggle { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;' +
+      ' --hc-c: var(--hc-off); background: color-mix(in srgb, var(--hc-c) 15%, transparent); color: var(--hc-c); }' +
+      '.toggle.private { --hc-c: var(--hc-on); }' +
+      '.toggle ha-icon { --mdc-icon-size: 22px; }' +
       '.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 1px 8px 1px 5px; border-radius: 12px; cursor: pointer;' +
       ' background: var(--secondary-background-color, rgba(128,128,128,0.12)); color: var(--primary-text-color); white-space: nowrap; user-select: none; }' +
       '.chip ha-icon { --mdc-icon-size: 13px; color: var(--secondary-text-color); }' +
