@@ -288,7 +288,7 @@ class HomeCameraCard extends HTMLElement {
     let summary = '';
     if (c.show_summary && cams.length) {
       if (!visible.length) summary = this._t(single ? 'one_hidden' : 'all_hidden');
-      else {
+      else if (!single) {
         summary = this._t(visible.length > 1 ? 'live_many' : 'live_one', { n: visible.length });
         if (hidden) summary += ` · ${this._t(hidden > 1 ? 'hidden_many' : 'hidden_one', { n: hidden })}`;
       }

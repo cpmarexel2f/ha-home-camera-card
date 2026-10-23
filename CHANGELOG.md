@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+### Changes
+- With a single camera, no summary line while it films ("1 camera live" is gone); *Camera disabled* still shows while it is hidden.
+
 ## 1.1.1
 
 ### Fixes
