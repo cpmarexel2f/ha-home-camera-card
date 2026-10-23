@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+### Changes
+- With a single camera, its **Disable** / **Enable** toggle takes the right of the title, and the HD / SD badge moves under the title (hidden while the camera is disabled, where *Camera disabled* shows instead).
+
+### Fixes
+- The grid never has more columns than cameras shown: a single visible camera takes the full width instead of half of it.
+
 ## 1.1.2
 
 ### Changes

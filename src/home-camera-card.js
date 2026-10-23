@@ -320,11 +320,21 @@ class HomeCameraCard extends HTMLElement {
         .join('');
     }
 
+    // A single camera with a toggle: the toggle sits on the right of the title, the quality under it
+    // (only while the camera films: once it is hidden, the line says so instead).
+    let right = quality;
+    let sub = summary ? `<div class="summary">${hcEsc(summary)}</div>` : '';
+    if (single && badges) {
+      right = badges;
+      if (visible.length) sub = `<div class="chips sub">${quality}</div>`;
+      badges = '';
+    }
+
     const level = cams.length && !visible.length ? 'off' : 'on';
     this.shadowRoot.querySelector('.head').innerHTML =
       `<div class="header"><div class="hicon ${level}"><ha-icon icon="${hcEsc(c.icon || 'mdi:cctv')}"></ha-icon></div>` +
-      `<div class="titles"><div class="name-row"><div class="name">${hcEsc(title)}</div><div class="chips">${quality}</div></div>` +
-      (summary ? `<div class="summary">${hcEsc(summary)}</div>` : '') +
+      `<div class="titles"><div class="name-row"><div class="name">${hcEsc(title)}</div><div class="chips">${right}</div></div>` +
+      sub +
       '</div></div>' +
       (badges ? `<div class="chips badges">${badges}</div>` : '');
   }
@@ -352,7 +362,7 @@ class HomeCameraCard extends HTMLElement {
       type: 'custom:advanced-camera-card',
       cameras: cameras,
       view: { default: 'live' },
-      live: { display: { mode: 'grid', grid_columns: Number(c.columns) || 2 } },
+      live: { display: { mode: visible.length > 1 ? 'grid' : 'single', grid_columns: hcColumns(c, visible) } },
       menu: {
         style: 'overlay',
         position: 'top',
@@ -398,7 +408,7 @@ class HomeCameraCard extends HTMLElement {
     // Without advanced-camera-card: Home Assistant's own picture-entity cards, live, in a grid.
     const grid = document.createElement('div');
     grid.className = 'grid';
-    grid.style.gridTemplateColumns = `repeat(${Number(this._config.columns) || 2}, minmax(0, 1fr))`;
+    grid.style.gridTemplateColumns = `repeat(${hcColumns(this._config, visible)}, minmax(0, 1fr))`;
     this._fallback = visible.map((cam) => {
       const el = helpers.createCardElement({
         type: 'picture-entity',
@@ -436,7 +446,8 @@ class HomeCameraCard extends HTMLElement {
       '.name { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 1.25; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
       '.summary { font-size: 12px; line-height: 1.35; margin-top: 2px; color: var(--secondary-text-color); }' +
       '.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }' +
-      '.chips.badges { justify-content: flex-start; }' +
+      '.chips.badges, .chips.sub { justify-content: flex-start; }' +
+      '.chips.sub { margin-top: 3px; }' +
       '.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 1px 8px 1px 5px; border-radius: 12px; cursor: pointer;' +
       ' background: var(--secondary-background-color, rgba(128,128,128,0.12)); color: var(--primary-text-color); white-space: nowrap; user-select: none; }' +
       '.chip ha-icon { --mdc-icon-size: 13px; color: var(--secondary-text-color); }' +
@@ -482,6 +493,11 @@ class HomeCameraCard extends HTMLElement {
     }
     this._update();
   }
+}
+
+// Grid columns, never more than the cameras shown: one camera takes the full width.
+function hcColumns(config, visible) {
+  return Math.max(1, Math.min(Number(config.columns) || 2, visible.length));
 }
 
 // Deep merge for camera_card overrides: objects merge, everything else replaces.
