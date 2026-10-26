@@ -48,6 +48,8 @@ window.mount = (cameras) => {
   window.streams = () => tiles().map((t) => t.querySelector("ha-camera-stream"));
   return el;
 };
+window.emit = (i, type, detail) =>
+  streams()[i].dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
 window.CAMS = [{ camera: "camera.a_hd_stream", ptz: "button.a_move" }, "camera.b_hd_stream", "camera.c"];
 `;
 
@@ -133,33 +135,219 @@ test("PTZ: arrows press their button, unavailable ones are greyed out and ignore
   assert.equal(r.noPtzOnOthers, true);
 });
 
-test("a tap or Enter on the image opens the camera dialog; with the arrows shown it closes them", async () => {
+test("a tap on a camera puts its tile fullscreen, without reconnecting any player", async () => {
+  const r = await page.evaluate(async () => {
+    mount(CAMS);
+    const start = window.__connects;
+    const requested = [];
+    const original = Element.prototype.requestFullscreen;
+    Element.prototype.requestFullscreen = function () {
+      requested.push(this.dataset.cam);
+      return Promise.resolve();
+    };
+    tiles()[1].querySelector(".open").click();
+    tiles()[0].querySelector(".open").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, composed: true }));
+    Element.prototype.requestFullscreen = original;
+    return { requested, connects: window.__connects - start };
+  });
+  assert.deepEqual(r.requested, ["b_hd_stream", "a_hd_stream"]);
+  assert.equal(r.connects, 0);
+});
+
+test("in fullscreen: image fitted, arrows shown, exit button instead of details, a tap exits", async () => {
+  const r = await page.evaluate(() => {
+    mount(CAMS);
+    const tile = tiles()[0];
+    tile.querySelector('[data-action="ptz"]').click(); // opened in the grid: replaced by the fullscreen arrows
+    // Fullscreen as the browser reports it.
+    Object.defineProperty(el.shadowRoot, "fullscreenElement", { configurable: true, get: () => tile });
+    tile.dispatchEvent(new Event("fullscreenchange"));
+    const inside = {
+      fit: tile.querySelector("ha-camera-stream").fitMode,
+      buttons: [...tile.querySelectorAll(".tools [data-action]")].map((b) => b.dataset.action),
+      arrows: tile.querySelectorAll(".move").length,
+      label: tile.querySelector(".open").getAttribute("aria-label"),
+    };
+    calls.length = 0;
+    tile.querySelector(".open").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, composed: true }));
+    inside.key = calls.at(-1)?.[2];
+    let exited = 0;
+    const original = document.exitFullscreen;
+    document.exitFullscreen = () => {
+      exited++;
+      return Promise.resolve();
+    };
+    tile.querySelector(".open").click();
+    tile.querySelector('[data-action="fullscreen"]').click();
+    document.exitFullscreen = original;
+    delete el.shadowRoot.fullscreenElement;
+    tile.dispatchEvent(new Event("fullscreenchange"));
+    return {
+      inside,
+      exited,
+      after: [...tile.querySelectorAll(".tools [data-action]")].map((b) => b.dataset.action),
+    };
+  });
+  assert.deepEqual(r.inside, {
+    fit: "contain",
+    buttons: ["fullscreen"],
+    arrows: 4,
+    label: "Exit fullscreen",
+    key: "button.a_move_left",
+  });
+  assert.equal(r.exited, 2);
+  assert.deepEqual(r.after, ["ptz", "details"]);
+});
+
+test("without element fullscreen (iPhone), the card covers the screen itself, with the arrows", async () => {
+  const r = await page.evaluate(() => {
+    mount(CAMS);
+    const original = [Element.prototype.requestFullscreen, Element.prototype.webkitRequestFullscreen];
+    Element.prototype.requestFullscreen = undefined;
+    Element.prototype.webkitRequestFullscreen = undefined;
+    const start = window.__connects;
+    const tile = tiles()[0];
+    tile.querySelector(".open").click();
+    const rect = tile.getBoundingClientRect();
+    const pad = getComputedStyle(tile.querySelector(".pad")).display;
+    calls.length = 0;
+    tile.querySelector(".move.up").click();
+    const press = calls.at(-1)?.[2];
+    // A tap on the image leaves; Escape too.
+    tile.querySelector(".open").click();
+    const afterTap = tile.classList.contains("pseudo");
+    tile.querySelector(".open").click();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    const afterEscape = tile.classList.contains("pseudo");
+    [Element.prototype.requestFullscreen, Element.prototype.webkitRequestFullscreen] = original;
+    return {
+      covers: Math.round(rect.width) === innerWidth && Math.round(rect.height) === innerHeight,
+      pad,
+      press,
+      afterTap,
+      afterEscape,
+      connects: window.__connects - start,
+    };
+  });
+  assert.deepEqual(r, {
+    covers: true,
+    pad: "block",
+    press: "button.a_move_up",
+    afterTap: false,
+    afterEscape: false,
+    connects: 0,
+  });
+});
+
+test("the details button opens the camera dialog", async () => {
   const r = await page.evaluate(() => {
     mount(CAMS);
     const opened = [];
     el.addEventListener("hass-more-info", (e) => opened.push(e.detail.entityId));
-    tiles()[1].querySelector(".open").click();
-    tiles()[2].querySelector(".open").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, composed: true }));
+    tiles()[1].querySelector('[data-action="details"]').click();
+    return opened;
+  });
+  assert.deepEqual(r, ["camera.b_hd_stream"]);
+});
+
+test("with the arrows shown, a tap on the image closes them instead of going fullscreen", async () => {
+  const r = await page.evaluate(() => {
+    mount(CAMS);
+    let requested = 0;
+    const original = Element.prototype.requestFullscreen;
+    Element.prototype.requestFullscreen = () => {
+      requested++;
+      return Promise.resolve();
+    };
     const tile = tiles()[0];
     tile.querySelector('[data-action="ptz"]').click();
     tile.querySelector(".open").click();
-    return { opened, closed: !tile.classList.contains("ptz-open") };
+    Element.prototype.requestFullscreen = original;
+    return { closed: !tile.classList.contains("ptz-open"), requested };
   });
-  assert.deepEqual(r.opened, ["camera.b_hd_stream", "camera.c"]);
-  assert.equal(r.closed, true);
+  assert.deepEqual(r, { closed: true, requested: 0 });
 });
 
-test("sound is on for one camera at a time", async () => {
+test("a held arrow keeps moving the camera; arrow keys move it too", async () => {
+  const r = await page.evaluate(async () => {
+    mount(CAMS);
+    calls.length = 0;
+    const tile = tiles()[0];
+    tile.querySelector('[data-action="ptz"]').click();
+    const left = tile.querySelector(".move.left");
+    left.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, composed: true, button: 0 }));
+    await new Promise((r) => setTimeout(r, 1000));
+    left.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, composed: true }));
+    const held = calls.length;
+    await new Promise((r) => setTimeout(r, 500));
+    const afterRelease = calls.length;
+    // The click that follows a pointer press does not press again.
+    left.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, detail: 1 }));
+    const afterClick = calls.length;
+    tile.querySelector(".open").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, composed: true }));
+    return { held, afterRelease, afterClick, last: calls.at(-1) };
+  });
+  // Press at 0, then 500 ms hold, then every 350 ms: 2 or 3 presses within a second.
+  assert.ok(r.held >= 2 && r.held <= 3, `held: ${r.held}`);
+  assert.equal(r.afterRelease, r.held);
+  assert.equal(r.afterClick, r.held);
+  assert.deepEqual(r.last, ["button", "press", "button.a_move_up"]);
+});
+
+test("a spinner shows until the first frame", async () => {
+  const r = await page.evaluate(() => {
+    mount(CAMS);
+    const loading = tiles().map((t) => t.classList.contains("loading"));
+    emit(0, "load");
+    el.hass = makeHass(baseStates()); // a mere state update keeps it loaded
+    return { loading, after: tiles().map((t) => t.classList.contains("loading")) };
+  });
+  assert.deepEqual(r.loading, [true, true, true]);
+  assert.deepEqual(r.after, [false, true, true]);
+});
+
+test("a privacy badge spins until its switch answers, and ignores taps meanwhile", async () => {
+  const r = await page.evaluate(() => {
+    mount(CAMS);
+    calls.length = 0;
+    const chip = () => el.shadowRoot.querySelector('[data-toggle="switch.b_privacy"]');
+    chip().click();
+    const pending = chip().classList.contains("pending");
+    chip().click();
+    const taps = calls.length;
+    el.hass = makeHass({ ...baseStates(), "switch.b_privacy": st("switch.b_privacy", "on") });
+    return { pending, taps, after: chip().className };
+  });
+  assert.equal(r.pending, true);
+  assert.equal(r.taps, 1);
+  assert.match(r.after, /private/);
+});
+
+test("the sound button shows on streams with sound, for one camera at a time", async () => {
   const r = await page.evaluate(() => {
     mount(CAMS);
     const sound = (i) => tiles()[i].querySelector('[data-action="sound"]');
+    const before = !!sound(0);
+    for (const i of [0, 1]) emit(i, "streams", { hasAudio: true, hasVideo: true });
+    emit(2, "streams", { hasAudio: false, hasVideo: true });
+    const shown = [0, 1, 2].map((i) => !!sound(i));
     sound(0).click();
     const first = streams().map((s) => s.muted);
     sound(1).click();
     const second = streams().map((s) => s.muted);
     sound(1).click();
-    return { first, second, third: streams().map((s) => s.muted), icon: sound(0).querySelector("ha-icon").getAttribute("icon") };
+    return {
+      before,
+      shown,
+      first,
+      second,
+      third: streams().map((s) => s.muted),
+      icon: sound(0).querySelector("ha-icon").getAttribute("icon"),
+    };
   });
+  // Only streams that carry sound get the button.
+  assert.equal(r.before, false);
+  assert.deepEqual(r.shown, [true, true, false]);
   assert.deepEqual(r.first, [false, true, true]);
   assert.deepEqual(r.second, [true, false, true]);
   assert.deepEqual(r.third, [true, true, true]);

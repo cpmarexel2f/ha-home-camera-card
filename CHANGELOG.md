@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0
+
+Ergonomics pass: quicker to read, quicker to act on.
+
+### What's new
+- **Tap a camera to put it fullscreen**, with its pan & tilt arrows always shown (larger) when the camera has some, and its sound and exit buttons; tap again, the exit button or Escape to come back. On iPhone, where pages cannot go fullscreen, the card covers the screen itself, arrows included.
+- The camera dialog moves to a *Details* button on each tile.
+- **Pan & tilt**: hold an arrow to keep moving; arrow keys move the camera while its arrows are shown; the pressed arrow lights up.
+- A spinner shows on each tile until its first frame arrives.
+- The sound button only shows on streams that carry sound.
+- Privacy badges and the single-camera toggle spin until the switch answers, and ignore taps meanwhile (no more double toggles).
+
+### Changes
+- Mouse: the tile buttons show on hover, so the images stay clear. Touch: they stay shown, and buttons and arrows are larger.
+- Header icon and single-camera toggle are 40 px, like the other cards; more room between the summary and the badges.
+
 ## 3.0.0
 
 Advanced Camera Card is no longer used: the card plays the cameras itself with Home Assistant's own player.

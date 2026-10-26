@@ -12,9 +12,9 @@ List the cameras, the card finds their privacy switch, SD stream and PTZ buttons
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=juju35&repository=ha-home-camera-card&category=plugin)
 
-| Light | Dark |
+| Light | Dark, pan & tilt |
 |---|---|
-| ![Camera card](https://raw.githubusercontent.com/juju35/ha-home-camera-card/main/screenshots/card.png) | ![Camera card, dark theme](https://raw.githubusercontent.com/juju35/ha-home-camera-card/main/screenshots/card-dark.png) |
+| ![Camera card](https://raw.githubusercontent.com/juju35/ha-home-camera-card/main/screenshots/card.png) | ![Camera card with the pan and tilt arrows, dark theme](https://raw.githubusercontent.com/juju35/ha-home-camera-card/main/screenshots/card-dark.png) |
 
 ## Features
 
@@ -24,9 +24,11 @@ List the cameras, the card finds their privacy switch, SD stream and PTZ buttons
 - Hidden cameras are removed from the grid: a camera is hidden when its **privacy switch is on** or its **power switch is off**
 - **HD / SD** switch: from an `input_select` shared by every dashboard, or from the card itself (remembered by the browser)
 - Live grid on Home Assistant's own player: WebRTC through go2rtc when available, else HLS or MJPEG — no other card to install
-- Tap a camera to open Home Assistant's camera dialog; a **fullscreen** button on every tile
-- **Sound** button on every tile, for one camera at a time (the grid starts muted)
-- **PTZ**: a button on the tile shows four arrows over the image; arrows whose button is unavailable are greyed out
+- **Tap a camera to put it fullscreen**, with its pan & tilt arrows always shown; tap again or press Escape to come back (on iPhone, the card covers the screen itself)
+- *Details* button on every tile for Home Assistant's camera dialog; **sound** button on streams that carry sound, for one camera at a time (the grid starts muted)
+- **PTZ**: a button on the tile shows four arrows over the image; hold an arrow to keep moving, or use the arrow keys; arrows whose button is unavailable are greyed out
+- Spinner until each camera's first frame; privacy badges spin until their switch answers
+- Mouse: tile buttons show on hover; touch: always shown, with larger targets
 - Hiding or showing a camera, or switching HD / SD, never reloads the streams of the other cameras
 - Streams stop while the page is hidden (other tab, phone locked) and resume when it comes back
 - Automatic discovery on the camera's device: `switch.*_privacy`, `button.*_move_left/right/up/down`, and the `*_sd_stream` camera next to a `*_hd_stream` one (Tapo integration naming)
@@ -140,7 +142,7 @@ cameras:
 
 ## Screenshots
 
-| Light (English) | Dark (French) |
+| Light | Dark, pan & tilt |
 |---|---|
 | ![card](screenshots/card.png) | ![card dark](screenshots/card-dark.png) |
 
