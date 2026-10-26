@@ -1,6 +1,6 @@
 {
   "name": "ha-home-camera-card",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "Lovelace card for Home Assistant showing every home camera in one grid, with privacy toggles, HD/SD switching and PTZ.",
   "private": true,
   "type": "module",
@@ -8,7 +8,8 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs && node --check dist/home-camera-card.js",
     "screenshots": "node scripts/screenshots.mjs",
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:browser": "node scripts/build.mjs && node --test \"test/browser/*.test.mjs\""
   },
   "license": "MIT",
   "devDependencies": {
