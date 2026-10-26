@@ -787,19 +787,21 @@ class HomeCameraCard extends HTMLElement {
       // --hc-glass: the smoked glass of everything laid over the images (labels, buttons, arrows).
       ':host { display: block; --hc-on: var(--success-color, #43a047); --hc-off: var(--error-color, #db4437);' +
       ' --hc-live: var(--error-color, #db4437); --hc-glass: rgba(14, 16, 20, 0.46); --hc-glass-line: rgba(255, 255, 255, 0.14); }' +
-      'ha-card { box-sizing: border-box; padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }' +
-      '.header { display: flex; align-items: center; gap: 10px; }' +
-      '.hicon { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;' +
-      ' --hc-c: var(--primary-color, #03a9f4); background: color-mix(in srgb, var(--hc-c) 15%, transparent); color: var(--hc-c); }' +
+      'ha-card { box-sizing: border-box; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }' +
+      // Icon and single-camera toggle at the top of the header row (12 px from the card's edge), the titles
+      // centred beside them, even when the HD / SD switch under a single camera's name makes them taller.
+      '.header { display: flex; align-items: flex-start; gap: 10px; }' +
+      '.hicon { width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center;' +
+      ' --hc-c: var(--primary-color, #03a9f4); background: color-mix(in srgb, var(--hc-c) 16%, transparent); color: var(--hc-c); }' +
       '.hicon.off { --hc-c: var(--secondary-text-color); }' +
       '.hicon ha-icon { --mdc-icon-size: 24px; }' +
-      '.titles { flex: 1; min-width: 0; }' +
+      '.titles { flex: 1; min-width: 0; align-self: center; }' +
       '.name-row { display: flex; align-items: center; gap: 8px; }' +
       '.name { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 1.25; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
       '.summary { font-size: 12px; line-height: 1.35; margin-top: 2px; color: var(--secondary-text-color); }' +
       '.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }' +
       '.chips.badges, .chips.sub { justify-content: flex-start; }' +
-      '.chips.badges { margin-top: 10px; }' +
+      '.chips.badges { margin-top: 8px; }' +
       '.chips.sub { margin-top: 4px; }' +
       // HD / SD switch: a track with the current option raised on it.
       '.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 12px; background: var(--secondary-background-color, rgba(128,128,128,0.12)); }' +
@@ -811,7 +813,7 @@ class HomeCameraCard extends HTMLElement {
       // green-tinted with the lock).
       '.toggle { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;' +
       ' background: var(--secondary-background-color, rgba(128,128,128,0.12)); color: var(--primary-text-color); }' +
-      '.toggle.private { background: color-mix(in srgb, var(--hc-on) 15%, transparent); color: var(--hc-on); }' +
+      '.toggle.private { background: color-mix(in srgb, var(--hc-on) 16%, transparent); color: var(--hc-on); }' +
       '.toggle.pending { color: var(--secondary-text-color); cursor: progress; }' +
       '.toggle ha-icon { --mdc-icon-size: 22px; }' +
       '.toggle .dot { width: 12px; height: 12px; }' +
@@ -819,7 +821,8 @@ class HomeCameraCard extends HTMLElement {
       '.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; line-height: 18px; padding: 1px 9px 1px 7px; border-radius: 12px;' +
       ' cursor: pointer; white-space: nowrap; user-select: none; background: var(--secondary-background-color, rgba(128,128,128,0.12)); color: var(--primary-text-color); }' +
       '.chip ha-icon { --mdc-icon-size: 13px; }' +
-      '.chip.private { background: color-mix(in srgb, var(--hc-on) 15%, transparent); color: var(--hc-on); }' +
+      '.chip.private { background: color-mix(in srgb, var(--hc-on) 16%, transparent); color: var(--hc-on); }' +
+      ':is(.chip, .toggle).private:hover { background: color-mix(in srgb, var(--hc-on) 24%, transparent); }' +
       '.chip.pending { cursor: progress; color: var(--secondary-text-color); }' +
       '.chip:focus-visible, .toggle:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 1px; }' +
       '.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--hc-live); }' +
@@ -870,7 +873,10 @@ class HomeCameraCard extends HTMLElement {
       '.btn:active { transform: scale(0.94); }' +
       '.btn:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 1px; }' +
       '.btn ha-icon { --mdc-icon-size: 17px; }' +
-      '.tile.ptz-open .btn.ptz, .btn.sound.on, .move:active { background: var(--primary-color, #03a9f4); border-color: transparent; }' +
+      // On: the same glass, the icon in the accent colour (no fill, like the other ha-* cards), and a faint
+      // accent ring that keeps the state readable where light scenes turn the glass grey.
+      '.tile.ptz-open .btn.ptz, .btn.sound.on, .move:active { color: var(--primary-color, #03a9f4);' +
+      ' box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-color, #03a9f4) 40%, transparent); }' +
       // Narrow tiles: the up arrow would run into the other buttons.
       '.tile.ptz-open .tools .btn:not(.ptz) { display: none; }' +
       // Pan & tilt: a round pad, its four arrows around a centre dot, in the bottom right corner (under the
@@ -885,7 +891,7 @@ class HomeCameraCard extends HTMLElement {
       '.move { --s: calc(var(--pad) * 0.32); position: absolute; width: var(--s); height: var(--s); touch-action: none;' +
       ' background: transparent; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }' +
       '.move:hover { background: rgba(255,255,255,0.12); }' +
-      '.move:active { background: var(--primary-color, #03a9f4); }' +
+      '.move:active { background: var(--hc-glass); }' +
       '.move ha-icon { --mdc-icon-size: calc(var(--s) * 0.62); filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7)); }' +
       '.move.left { left: 2px; top: calc(50% - var(--s) / 2); }' +
       '.move.right { right: 2px; top: calc(50% - var(--s) / 2); }' +
