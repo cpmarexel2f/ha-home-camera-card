@@ -12,8 +12,12 @@ on:
 # refreshed screenshots back onto the pull request's own branch, so they land through
 # the normal merge. Fork PRs and manual runs never push; manual runs upload the
 # rendered screenshots as a workflow artifact instead.
+# A push made with GITHUB_TOKEN does not trigger pull_request workflows, but it may
+# dispatch them: after pushing a screenshot commit the job re-runs the PR checks
+# (lint, validate, hacs) on the branch through workflow_dispatch (needs actions: write).
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: screenshots-${{ github.head_ref || github.ref_name }}
@@ -26,7 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
+          # Fork PR branches do not exist in this repository: only check out the
+          # head branch for same-repo PRs (where screenshots get pushed back).
+          # Everything else keeps the default ref — for a fork PR that is the merge
+          # ref, which github.ref_name ("N/merge") does not resolve to.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref || '' }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -43,9 +51,10 @@ jobs:
             timeout 150 sudo apt-get update \
               && timeout 300 sudo apt-get install -y ffmpeg fonts-roboto \
               && timeout 300 npx playwright install-deps chromium \
-              && break
+              && ok=1 && break
             echo "apt attempt $i failed or timed out, retrying in 15s"; sleep 15
           done
+          [ -n "$ok" ] || { echo "::error::apt failed 3 times"; exit 1; }
           ffmpeg -version > /dev/null
       - run: npm run build
       - name: Render screenshots
@@ -62,6 +71,7 @@ jobs:
           name: screenshots
           path: screenshots/
       - name: Commit refreshed screenshots
+        id: commit
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
           if [ -z "$(git status --porcelain screenshots)" ]; then
@@ -73,3 +83,12 @@ jobs:
           git add screenshots
           git commit -m "chore: refresh screenshots"
           git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+      - name: Re-run checks on the screenshot commit
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for wf in lint.yml validate.yml hacs.yml; do
+            [ -f ".github/workflows/$wf" ] && gh workflow run "$wf" --ref "${{ github.head_ref }}"
+          done
