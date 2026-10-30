@@ -1369,6 +1369,8 @@ class HomeCameraCardEditor extends HTMLElement {
               { value: 'en', label: 'English' },
               { value: 'de', label: 'Deutsch' },
               { value: 'es', label: 'Español' },
+              { value: 'sr', label: 'Српски' },
+              { value: 'sr-Latn', label: 'Srpski (latinica)' },             
             ],
           },
         },
